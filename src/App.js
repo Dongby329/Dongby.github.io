@@ -65,44 +65,28 @@ export default function App() {
         }
 
         const hero = document.querySelector('#hero');
-        const heroTitleLines = hero ? hero.querySelectorAll('.hero-title-line') : [];
-        const heroDesc = hero ? hero.querySelectorAll('.hero-desc') : [];
+        const heroPressureWrap = hero ? hero.querySelector('.hero-pressure-wrap') : null;
         const heroCta = hero ? hero.querySelector('.hero-cta') : null;
 
-        // 首屏 Opening：从压缩+遮罩揭开+位移归位，节奏偏慢
-        if (hero && heroTitleLines.length && gsap) {
+        // 首屏 Opening：标题 fade-in + 轻微上移，节奏偏慢
+        if (hero && heroPressureWrap && gsap) {
           gsap.set(hero, { opacity: 1 });
-          gsap.set(heroTitleLines, {
-            opacity: 0,
-            yPercent: 40,
-            skewY: 6,
-            clipPath: 'inset(0 0 100% 0)',
-          });
-          gsap.set(heroDesc, { opacity: 0, y: 24 });
-          if (heroCta) gsap.set(heroCta, { opacity: 0, y: 40 });
+          gsap.set(heroPressureWrap, { opacity: 0, y: 48 });
+          if (heroCta) gsap.set(heroCta, { opacity: 0, y: 32 });
 
           gsap.timeline({
             defaults: { ease: 'power3.out' },
           })
-            .to(heroTitleLines, {
-              opacity: 1,
-              yPercent: 0,
-              skewY: 0,
-              clipPath: 'inset(0 0 0% 0)',
-              stagger: 0.14,
-              duration: 1.4,
-            }, 0.1)
-            .to(heroDesc, {
+            .to(heroPressureWrap, {
               opacity: 1,
               y: 0,
-              stagger: 0.08,
-              duration: 0.9,
-            }, '-=0.6')
+              duration: 1.6,
+            }, 0.1)
             .to(heroCta, {
               opacity: 1,
               y: 0,
-              duration: 0.9,
-            }, '-=0.5');
+              duration: 0.8,
+            }, '-=0.4');
         }
 
         if (!gsap || !scrollTrigger) return;

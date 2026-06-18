@@ -190,9 +190,29 @@ function VideoPlayer({ project, onClose }) {
 
 export default function Projects() {
   const ref = useScrollAnimate();
+  const scrollRef = useRef(null);
+  const trackRef = useRef(null);
+  const scrollRaf = useRef(0);
+  const scrollPos = useRef(0);
   const [activeProject, setActiveProject] = useState(null);
+  const [paused, setPaused] = useState(false);
 
   const projects = [
+    {
+      title: '快速周报日报生成器',
+      desc: '面向所有职场人的开源日报 / 周报编写助手。每天填写关键字段后，AI 自动生成专业量化日报，支持 3 种风格轮转（专业 / 数据 / 简洁），周五自动汇总本周日报生成周报，彻底告别形式主义重复劳动。',
+      tags: ['Python', 'DeepSeek', 'MVP v1.0', 'Open Source'],
+      gradient: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+      link: 'https://github.com/Dongby329/weekly-report-assistant',
+      isLink: true,
+      images: [
+        './src/assets/weekly-report/1.png',
+        './src/assets/weekly-report/2.png',
+        './src/assets/weekly-report/3.png',
+        './src/assets/weekly-report/4.png',
+        './src/assets/weekly-report/5.png',
+      ],
+    },
     {
       title: 'AIGC 微电影 — 审判日',
       desc: '基于可灵 3.0 生视频模型，全流程参与从创意构思、提示词调试、多轮生成与筛选到后期包装的 AIGC 微电影项目。探索 AI 在影视创作中的边界与可能。',
@@ -214,63 +234,104 @@ export default function Projects() {
     },
   ];
 
+  // JS 驱动无限循环滚动，平滑无跳帧
+  useEffect(() => {
+    const track = trackRef.current;
+    const scroll = scrollRef.current;
+    if (!track || !scroll) return;
+
+    const speed = 1.2; // px/frame，60fps
+
+    const animate = () => {
+      if (!paused) {
+        scrollPos.current -= speed;
+        const singleSetWidth = track.scrollWidth / 2;
+        if (Math.abs(scrollPos.current) >= singleSetWidth) {
+          scrollPos.current += singleSetWidth;
+        }
+        track.style.transform = `translateX(${scrollPos.current}px)`;
+      }
+      scrollRaf.current = requestAnimationFrame(animate);
+    };
+
+    scrollRaf.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(scrollRaf.current);
+  }, [paused]);
+
+  const handleCardClick = (p) => {
+    if (p.isLink) {
+      window.open(p.link, '_blank', 'noopener');
+      return;
+    }
+    if (p.videoSrc) {
+      setActiveProject(p);
+    }
+  };
+
   return h(React.Fragment, null,
     h('section', { id: 'projects', className: 'sec' },
       h('div', { className: 'sec-in' },
         h('div', { className: 'sec-label' }, 'Portfolio'),
         h('h2', { className: 'sec-title' }, '精选项目'),
-        h('div', { className: 'proj-g a-fu', ref: ref },
-          projects.map((p, i) =>
-            h('article', {
-              className: p.videoSrc ? 'proj-card proj-card-video' : 'proj-card',
-              key: p.title,
-              style: { animationDelay: `${i * 0.15}s` },
-              onClick: p.videoSrc ? () => setActiveProject(p) : undefined,
-              role: p.videoSrc ? 'button' : undefined,
-              tabIndex: p.videoSrc ? 0 : undefined,
-              onKeyDown: p.videoSrc ? (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  setActiveProject(p);
-                }
-              } : undefined,
-            },
-              h('div', {
-                className: p.videoSrc ? 'proj-img proj-video-wrap' : p.images ? 'proj-img proj-gallery-wrap' : 'proj-img',
-                style: { background: p.images ? '#000' : p.gradient }
-              }, p.videoSrc
-                ? h(React.Fragment, null,
-                  h('video', {
-                    className: 'proj-video',
-                    src: p.videoSrc,
-                    autoPlay: true,
-                    muted: true,
-                    loop: true,
-                    playsInline: true,
-                    preload: 'metadata',
-                    'aria-label': `${p.title} 静音预览`,
-                  }),
-                  h('div', { className: 'proj-play-badge' }, '播放')
-                )
-                : p.images
-                  ? h('div', { className: 'proj-gallery-track' },
-                    [...p.images, ...p.images].map((src, imageIndex) =>
-                      h('img', {
-                        className: 'proj-gallery-img',
-                        src,
-                        alt: `${p.title} 界面展示 ${imageIndex + 1}`,
-                        key: `${src}-${imageIndex}`,
-                        loading: 'lazy',
-                      })
-                    )
+        h('div', {
+          className: 'proj-scroll a-fu',
+          ref: (el) => { ref.current = el; scrollRef.current = el; },
+          onMouseEnter: () => setPaused(true),
+          onMouseLeave: () => setPaused(false),
+        },
+          h('div', { className: 'proj-track', ref: trackRef },
+            [...projects, ...projects].map((p, i) =>
+              h('article', {
+                className: p.videoSrc ? 'proj-card proj-card-video' : 'proj-card',
+                key: `${p.title}-${i}`,
+                style: { animationDelay: `${i * 0.15}s` },
+                onClick: () => handleCardClick(p),
+                role: 'button',
+                tabIndex: 0,
+                onKeyDown: (event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleCardClick(p);
+                  }
+                },
+              },
+                h('div', {
+                  className: p.videoSrc ? 'proj-img proj-video-wrap' : p.images ? 'proj-img proj-gallery-wrap' : 'proj-img',
+                  style: { background: p.images ? '#000' : p.gradient }
+                }, p.videoSrc
+                  ? h(React.Fragment, null,
+                    h('video', {
+                      className: 'proj-video',
+                      src: p.videoSrc,
+                      autoPlay: true,
+                      muted: true,
+                      loop: true,
+                      playsInline: true,
+                      preload: 'metadata',
+                      'aria-label': `${p.title} 静音预览`,
+                    }),
+                    h('div', { className: 'proj-play-badge' }, '播放')
                   )
-                : h('span', null, p.title)
-              ),
-              h('div', { className: 'proj-c' },
-                h('h3', { className: 'proj-title' }, p.title),
-                h('p', { className: 'proj-desc' }, p.desc),
-                h('div', { className: 'proj-tags' },
-                  p.tags.map(tag => h('span', { className: 'proj-tag', key: tag }, tag))
+                  : p.images
+                    ? h('div', { className: p.isLink ? 'proj-gallery-track-weekly' : 'proj-gallery-track' },
+                      [...p.images, ...p.images].map((src, imageIndex) =>
+                        h('img', {
+                          className: p.isLink ? 'proj-gallery-img-weekly' : 'proj-gallery-img',
+                          src,
+                          alt: `${p.title} 界面展示 ${imageIndex + 1}`,
+                          key: `${src}-${imageIndex}`,
+                          loading: 'lazy',
+                        })
+                      )
+                    )
+                  : h('span', null, p.title)
+                ),
+                h('div', { className: 'proj-c' },
+                  h('h3', { className: 'proj-title' }, p.title),
+                  h('p', { className: 'proj-desc' }, p.desc),
+                  h('div', { className: 'proj-tags' },
+                    p.tags.map(tag => h('span', { className: 'proj-tag', key: tag }, tag))
+                  )
                 )
               )
             )

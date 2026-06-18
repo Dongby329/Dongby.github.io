@@ -28,7 +28,7 @@ export default function Navigation({ scrolled }) {
             })
           )
         ),
-        h('span', { className: 'nav-logo-text' }, '董博宇')
+        h('span', { className: 'nav-logo-text' }, 'DONGBOYU')
       ),
       h('ul', { className: 'nav-links' },
         links.map(link =>
