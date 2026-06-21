@@ -28,8 +28,12 @@ export default function Contact() {
           'A13078574711@outlook.com'
         ),
         h('div', { className: 'contact-info-item' },
+          h('strong', null, '学校'),
+          '南昌航空大学'
+        ),
+        h('div', { className: 'contact-info-item' },
           h('strong', null, '地点'),
-          '中国'
+          '中国 · 南昌'
         )
       )
     )

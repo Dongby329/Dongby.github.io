@@ -40,7 +40,12 @@ export default function TextPressure({
   strokeColor = '#FF0000',
   className = '',
 
-  minFontSize = 24
+  minFontSize = 24,
+  minWeight = 100,
+  maxWeight = 900,
+
+  // Static font mode: use CSS transforms instead of font-variation-settings
+  staticFont = false
 }) {
   const containerRef = useRef(null);
   const titleRef = useRef(null);
@@ -135,18 +140,49 @@ export default function TextPressure({
 
           const d = dist(mouseRef.current, charCenter);
 
-          const wdth = width ? Math.floor(getAttr(d, maxDist, 5, 200)) : 100;
-          const wght = weight ? Math.floor(getAttr(d, maxDist, 100, 900)) : 400;
-          const italVal = italic ? getAttr(d, maxDist, 0, 1).toFixed(2) : 0;
-          const alphaVal = alpha ? getAttr(d, maxDist, 0, 1).toFixed(2) : 1;
+          if (staticFont) {
+            // ── Static font: use CSS transforms + text-stroke ──
+            const wdth = width ? getAttr(d, maxDist, 5, 200) : 100;        // 5..200
+            const wght = weight ? getAttr(d, maxDist, minWeight, maxWeight) : 400;
+            const italVal = italic ? getAttr(d, maxDist, 0, 1) : 0;
+            const alphaVal = alpha ? getAttr(d, maxDist, 0.15, 1).toFixed(2) : 1;
 
-          const newFontVariationSettings = `'wght' ${wght}, 'wdth' ${wdth}, 'ital' ${italVal}`;
+            // scaleX: map wdth 5..200 → 0.85..1.15
+            const sx = 1 + (wdth - 100) / 100 * 0.18;
+            // skewX: map ital 0..1 → 0..12 deg
+            const skx = italVal * 12;
+            // stroke: map wght → 0..5px
+            const weightRatio = (wght - 100) / 800;
+            const strokeW = Math.max(0, weightRatio * 5);
 
-          if (span.style.fontVariationSettings !== newFontVariationSettings) {
-            span.style.fontVariationSettings = newFontVariationSettings;
-          }
-          if (alpha && span.style.opacity !== alphaVal) {
-            span.style.opacity = alphaVal;
+            const transform = `scaleX(${sx.toFixed(3)}) skewX(${skx.toFixed(2)}deg)`;
+
+            if (span.style.transform !== transform) {
+              span.style.transform = transform;
+            }
+            const newStroke = `${strokeW.toFixed(2)}px`;
+            if (span.style.webkitTextStrokeWidth !== newStroke) {
+              span.style.webkitTextStrokeWidth = newStroke;
+              span.style.webkitTextStrokeColor = textColor;
+            }
+            if (alpha) {
+              span.style.opacity = alphaVal;
+            }
+          } else {
+            // ── Variable font: use font-variation-settings ──
+            const wdth = width ? Math.floor(getAttr(d, maxDist, 5, 200)) : 100;
+            const wght = weight ? Math.floor(getAttr(d, maxDist, minWeight, maxWeight)) : 400;
+            const italVal = italic ? getAttr(d, maxDist, 0, 1).toFixed(2) : 0;
+            const alphaVal = alpha ? getAttr(d, maxDist, 0, 1).toFixed(2) : 1;
+
+            const newFontVariationSettings = `'wght' ${wght}, 'wdth' ${wdth}, 'ital' ${italVal}`;
+
+            if (span.style.fontVariationSettings !== newFontVariationSettings) {
+              span.style.fontVariationSettings = newFontVariationSettings;
+            }
+            if (alpha && span.style.opacity !== alphaVal) {
+              span.style.opacity = alphaVal;
+            }
           }
         });
       }
@@ -156,17 +192,53 @@ export default function TextPressure({
 
     animate();
     return () => cancelAnimationFrame(rafId);
-  }, [width, weight, italic, alpha]);
+  }, [width, weight, italic, alpha, staticFont, textColor, minWeight, maxWeight]);
 
   const styleElement = useMemo(() => {
-    return h('style', null,
-      `@font-face {
-        font-family: '${fontFamily}';
-        src: url('${fontUrl}');
-        font-style: normal;
-      }
+    // Only inject @font-face for variable fonts (CDN-loaded)
+    if (!staticFont && fontUrl) {
+      return h('style', null,
+        `@font-face {
+          font-family: '${fontFamily}';
+          src: url('${fontUrl}');
+          font-style: normal;
+        }
 
-      .flex {
+        .flex {
+          display: flex;
+          justify-content: space-between;
+        }
+
+        .stroke span {
+          position: relative;
+          color: ${textColor};
+        }
+        .stroke span::after {
+          content: attr(data-char);
+          position: absolute;
+          left: 0;
+          top: 0;
+          color: transparent;
+          z-index: -1;
+          -webkit-text-stroke-width: 3px;
+          -webkit-text-stroke-color: ${strokeColor};
+        }
+
+        .text-pressure-title {
+          color: ${textColor};
+        }
+        .text-pressure-title.center {
+          display: flex;
+          justify-content: center;
+        }
+        .text-pressure-title.center span {
+          flex-shrink: 0;
+        }`
+      );
+    }
+    // Static font: @font-face handled externally, only inject utility styles
+    return h('style', null,
+      `.flex {
         display: flex;
         justify-content: space-between;
       }
@@ -188,11 +260,25 @@ export default function TextPressure({
 
       .text-pressure-title {
         color: ${textColor};
+      }
+      .text-pressure-title.center {
+        display: flex;
+        justify-content: center;
+      }
+      .text-pressure-title.center span {
+        flex-shrink: 0;
       }`
     );
-  }, [fontFamily, fontUrl, textColor, strokeColor]);
+  }, [fontFamily, fontUrl, textColor, strokeColor, staticFont]);
 
-  const dynamicClassName = [className, flex ? 'flex' : '', stroke ? 'stroke' : ''].filter(Boolean).join(' ');
+  const dynamicClassName = [
+    className,
+    flex ? 'flex' : 'center',
+    stroke ? 'stroke' : ''
+  ].filter(Boolean).join(' ');
+
+  // Base font weight for static fonts should be normal (not 100)
+  const baseWeight = staticFont ? 700 : 100;
 
   return h('div', {
     ref: containerRef,
@@ -215,10 +301,9 @@ export default function TextPressure({
         transform: `scale(1, ${scaleY})`,
         transformOrigin: 'center top',
         margin: 0,
-        textAlign: 'center',
         userSelect: 'none',
         whiteSpace: 'nowrap',
-        fontWeight: 100,
+        fontWeight: baseWeight,
         width: '100%'
       }
     },
@@ -229,7 +314,8 @@ export default function TextPressure({
           'data-char': char,
           style: {
             display: 'inline-block',
-            color: stroke ? undefined : textColor
+            color: stroke ? undefined : textColor,
+            willChange: staticFont ? 'transform' : undefined
           }
         }, char)
       )

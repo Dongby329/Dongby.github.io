@@ -65,28 +65,28 @@ export default function App() {
         }
 
         const hero = document.querySelector('#hero');
+        const heroTagline = hero ? hero.querySelector('.hero-tagline') : null;
         const heroPressureWrap = hero ? hero.querySelector('.hero-pressure-wrap') : null;
+        const heroSubtitle = hero ? hero.querySelector('.hero-subtitle') : null;
         const heroCta = hero ? hero.querySelector('.hero-cta') : null;
 
-        // 首屏 Opening：标题 fade-in + 轻微上移，节奏偏慢
+        // 首屏 Opening：staggered fade-in
         if (hero && heroPressureWrap && gsap) {
           gsap.set(hero, { opacity: 1 });
-          gsap.set(heroPressureWrap, { opacity: 0, y: 48 });
-          if (heroCta) gsap.set(heroCta, { opacity: 0, y: 32 });
 
-          gsap.timeline({
-            defaults: { ease: 'power3.out' },
-          })
-            .to(heroPressureWrap, {
-              opacity: 1,
-              y: 0,
-              duration: 1.6,
-            }, 0.1)
-            .to(heroCta, {
-              opacity: 1,
-              y: 0,
-              duration: 0.8,
-            }, '-=0.4');
+          const heroElements = [
+            { el: heroTagline, y: 32 },
+            { el: heroPressureWrap, y: 48 },
+            { el: heroSubtitle, y: 32 },
+            { el: heroCta, y: 32 }
+          ].filter(item => item.el);
+
+          heroElements.forEach(({ el, y }) => gsap.set(el, { opacity: 0, y }));
+
+          const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+          heroElements.forEach(({ el }, i) => {
+            tl.to(el, { opacity: 1, y: 0, duration: 0.8 }, i === 0 ? 0.05 : '-=0.4');
+          });
         }
 
         if (!gsap || !scrollTrigger) return;

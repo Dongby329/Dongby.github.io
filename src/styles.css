@@ -85,6 +85,27 @@ body.player-open { overflow:hidden; }
   background: #fb923c;
   transform: translateY(-1px);
 }
+/* ===================================
+   Sounso Quality — Web Font
+   =================================== */
+@font-face {
+  font-family: 'Sounso Quality';
+  src: url('./assets/fonts/SounsoQuality.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sounso Quality';
+  src: url('./assets/fonts/SounsoQuality.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===================================
+   Hero — Redesigned
+   =================================== */
 .hero {
   min-height: 100vh;
   display: flex;
@@ -94,7 +115,59 @@ body.player-open { overflow:hidden; }
   overflow: hidden;
 }
 
-/* Main content - centered */
+/* --- animated background orbs --- */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.hero-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  will-change: transform;
+}
+.hero-bg-orb--1 {
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(245,158,11,.18) 0%, transparent 70%);
+  top: -280px;
+  right: -180px;
+  animation: orb-drift-1 12s ease-in-out infinite;
+}
+.hero-bg-orb--2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(249,115,22,.14) 0%, transparent 70%);
+  bottom: -200px;
+  left: -120px;
+  animation: orb-drift-2 14s ease-in-out infinite;
+}
+.hero-bg-orb--3 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(56,189,248,.10) 0%, transparent 70%);
+  top: 40%;
+  left: 60%;
+  animation: orb-drift-3 16s ease-in-out infinite;
+}
+@keyframes orb-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(50px, -40px) scale(1.06); }
+  66%  { transform: translate(-20px, 30px) scale(0.95); }
+}
+@keyframes orb-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(-40px, 50px) scale(1.08); }
+  66%  { transform: translate(30px, -20px) scale(0.94); }
+}
+@keyframes orb-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(-60px, -30px) scale(1.12); }
+}
+
+/* --- main content --- */
 .hero-content {
   position: relative;
   z-index: 2;
@@ -109,23 +182,71 @@ body.player-open { overflow:hidden; }
   justify-content: center;
 }
 
-/* TextPressure wrapper */
+/* --- tagline above title --- */
+.hero-tagline {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 24px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+/* --- TextPressure wrapper --- */
 .hero-pressure-wrap {
   position: relative;
   width: 100%;
-  height: clamp(100px, 16vw, 220px);
+  height: clamp(130px, 17vw, 250px);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* CTA buttons */
+/* --- subtitle below title --- */
+.hero-subtitle {
+  font-size: 18px;
+  color: var(--text-2);
+  margin-top: 24px;
+  font-weight: 300;
+  letter-spacing: 3px;
+  opacity: 0.8;
+}
+
+/* --- CTA buttons --- */
 .hero-cta {
   display: flex;
   gap: 20px;
   justify-content: center;
-  margin-top: 40px;
+  margin-top: 52px;
   flex-wrap: wrap;
+}
+
+/* --- scroll indicator --- */
+.hero-scroll {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.hero-scroll-line {
+  display: block;
+  width: 1px;
+  height: 56px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,.35),
+    rgba(255,255,255,.08) 60%,
+    transparent
+  );
+  border-radius: 1px;
+  animation: scroll-pulse 2.2s ease-in-out infinite;
+}
+@keyframes scroll-pulse {
+  0%, 100% { opacity: 0.25; transform: scaleY(0.9); transform-origin: top; }
+  50%  { opacity: 1; transform: scaleY(1.15); transform-origin: top; }
 }
 .btn-primary {
   display: inline-flex;
@@ -286,13 +407,25 @@ body.player-open { overflow:hidden; }
 /* Responsive hero */
 @media (max-width: 1024px) {
   .hero-content { padding: 0 32px; width: 92vw; }
-  .hero-pressure-wrap { height: clamp(90px, 14vw, 180px); }
+  .hero-pressure-wrap { height: clamp(110px, 15vw, 200px); }
+  .hero-tagline { font-size: 11px; letter-spacing: 6px; }
+  .hero-subtitle { font-size: 16px; letter-spacing: 2px; }
+  .hero-bg-orb--1 { width: 500px; height: 500px; top: -200px; right: -120px; }
+  .hero-bg-orb--2 { width: 360px; height: 360px; bottom: -140px; left: -80px; }
+  .hero-bg-orb--3 { width: 280px; height: 280px; }
 }
 @media (max-width: 768px) {
   .hero-content { padding: 0 24px; width: 94vw; }
-  .hero-pressure-wrap { height: clamp(70px, 18vw, 140px); }
-  .hero-cta { flex-direction: column; align-items: center; }
+  .hero-pressure-wrap { height: clamp(80px, 20vw, 160px); }
+  .hero-tagline { font-size: 10px; letter-spacing: 5px; margin-bottom: 14px; }
+  .hero-subtitle { font-size: 14px; letter-spacing: 1.5px; margin-top: 14px; }
+  .hero-cta { flex-direction: column; align-items: center; margin-top: 40px; }
   .btn-primary, .btn-secondary { width: 200px; }
+  .hero-bg-orb--1 { width: 360px; height: 360px; top: -140px; right: -80px; }
+  .hero-bg-orb--2 { width: 260px; height: 260px; bottom: -100px; left: -60px; }
+  .hero-bg-orb--3 { width: 200px; height: 200px; }
+  .hero-scroll { bottom: 24px; }
+  .hero-scroll-line { height: 40px; }
 }
 
 .sec { padding:140px 48px; }

@@ -199,6 +199,17 @@ export default function Projects() {
 
   const projects = [
     {
+      title: '今日运势分析器',
+      desc: '星座 × 传统命理 × AI —— 输入出生信息，一键生成精准每日运势报告。集成星座/生肖/八字三合一算法引擎，支持超时空对话（AI 扮演历史人物角色聊天）、AI 智能穿搭推荐。纯前端计算 + localStorage 本地存储，数据不上传，保护隐私。',
+      tags: ['JavaScript', 'AI/LLM', '八字算法', 'Tailwind CSS', 'v2.0'],
+      gradient: 'linear-gradient(135deg, #1a0a0a 0%, #2a1018 40%, #0f0a1a 100%)',
+      link: 'https://dongby329.github.io/daily-fortune-analyzer/',
+      isLink: true,
+      images: [
+        './src/assets/fortune/screenshot.png',
+      ],
+    },
+    {
       title: '快速周报日报生成器',
       desc: '面向所有职场人的开源日报 / 周报编写助手。每天填写关键字段后，AI 自动生成专业量化日报，支持 3 种风格轮转（专业 / 数据 / 简洁），周五自动汇总本周日报生成周报，彻底告别形式主义重复劳动。',
       tags: ['Python', 'DeepSeek', 'MVP v1.0', 'Open Source'],
@@ -324,7 +335,11 @@ export default function Projects() {
                         })
                       )
                     )
-                  : h('span', null, p.title)
+                  : p.isLink
+                    ? h('div', { className: 'proj-link-placeholder' },
+                        h('span', { className: 'proj-link-icon' }, p.icon || '🔗')
+                      )
+                    : h('span', null, p.title)
                 ),
                 h('div', { className: 'proj-c' },
                   h('h3', { className: 'proj-title' }, p.title),
